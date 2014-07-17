@@ -1,0 +1,167 @@
+#!/bin/bash
+
+# this is a simple config for herbstluftwm
+
+function hc() {
+    herbstclient "$@"
+}
+
+hc emit_hook reload
+#hc pad 0 0 0 0 0    
+hc pad 0 18 0 0 0  
+#conky -q  
+
+# remove all existing keybindings
+hc keyunbind --all
+
+# keybindings
+Mod=Mod1
+Win=Mod4
+hc keybind $Mod-Shift-q quit
+hc keybind $Mod-Shift-r reload
+hc keybind $Mod-Shift-c close
+hc keybind $Mod-Return spawn urxvt 
+hc keybind $Mod-F2 spawn bbqrun
+
+hc keybind $Win-p spawn dmenu_run -b -fn '-*-fixed-*-*-*-*-10-*-*-*-*-*-*-*' -nb '#101010' -nf '#555555' -sb '#101010' -sf '#ffffff' #'#9fbc00'
+
+hc keybind $Mod-F1 spawn x-terminal-emulator -e editors
+hc keybind $Mod-q close
+hc keybind $Mod-Shift-o spawn dkeg_osd 
+hc keybind $Mod-Shift-p spawn nowPlaying 
+hc keybind $Mod-Escape use_previous
+
+# volume
+hc keybind $Mod-Shift-equal spawn amixer set Master 5.0%+
+hc keybind $Mod-Shift-minus spawn amixer set Master 5.0%-
+hc keybind $Mod-Shift-F8 spawn amixer set Master toggle
+
+# tags
+#TAG_NAMES=(. : .: ::)
+TAG_NAMES=(cli www media misc)
+#TAG_NAMES=( {1..9} )
+TAG_KEYS=( {1..4} 0 )
+
+hc rename default "${TAG_NAMES[0]}" || true
+for i in ${!TAG_NAMES[@]} ; do
+    hc add "${TAG_NAMES[$i]}"
+    key="${TAG_KEYS[$i]}"
+    if ! [ -z "$key" ] ; then
+        hc keybind "$Mod-$key" use_index "$i"
+        hc keybind "$Mod-Shift-$key" move_index "$i"
+    fi
+done
+
+# cycle through tags
+hc keybind $Mod-period use_index +1 --skip-visible
+hc keybind $Mod-comma  use_index -1 --skip-visible
+hc keybind $Mod-Right use_index +1 --skip-visible
+hc keybind $Mod-Left  use_index -1 --skip-visible
+
+# layouting
+hc keybind $Mod-r remove
+hc keybind $Mod-space cycle_layout 1
+
+# frames
+hc keybind $Mod-u split vertical 0.4
+hc keybind $Mod-o split horizontal 0.4
+hc keybind $Mod-e split explode
+hc keybind $Mod-s floating toggle
+hc keybind $Mod-f fullscreen toggle
+hc keybind $Mod-p pseudotile toggle
+
+# resizing
+RESIZESTEP=0.02
+hc keybind $Win-h resize left +$RESIZESTEP
+hc keybind $Win-j resize down +$RESIZESTEP
+hc keybind $Win-k resize up +$RESIZESTEP
+hc keybind $Win-l resize right +$RESIZESTEP
+
+#hc keybind $Mod-Control-h resize left +$RESIZESTEP
+#hc keybind $Mod-Control-j resize down +$RESIZESTEP
+#hc keybind $Mod-Control-k resize up +$RESIZESTEP
+#hc keybind $Mod-Control-l resize right +$RESIZESTEP
+
+# mouse
+hc mouseunbind --all
+hc mousebind $Mod-Button1 move
+hc mousebind $Mod-Button3 resize
+hc mousebind $Mod-Button2 zoom
+
+# focus
+hc keybind $Mod-BackSpace   cycle_monitor
+hc keybind $Mod-Tab         cycle_all +1
+hc keybind $Mod-Shift-Tab   cycle_all -1
+hc keybind $Mod-c cycle
+hc keybind $Mod-h focus left
+hc keybind $Mod-j focus down
+hc keybind $Mod-k focus up
+hc keybind $Mod-l focus right
+hc keybind $Mod-i jumpto urgent
+hc keybind $Mod-Shift-h shift left
+hc keybind $Mod-Shift-j shift down
+hc keybind $Mod-Shift-k shift up
+hc keybind $Mod-Shift-l shift right
+hc set focus_follows_mouse 1
+
+# colors
+
+hc set frame_border_normal_color '#000000'
+hc set frame_bg_active_color '#000000'
+hc set frame_active_opacity 1
+hc set frame_normal_opacity 1
+hc set window_border_normal_color '#282221'
+hc set window_border_active_color '#35312f'
+
+# Borders
+hc set frame_bg_transparent 1 
+hc set frame_border_width 0 
+hc set window_border_width 3 
+hc set window_border_inner_width 0 
+hc set always_show_frame 0 
+hc set frame_gap 0 
+
+# add overlapping window borders
+hc set window_gap 10 
+hc set frame_padding 0  #2
+hc set smart_window_surroundings 0 
+hc set smart_frame_surroundings 0 
+hc set mouse_recenter_gap 0
+
+
+# rules
+#hc default_frame_layout 0 
+hc unrule -F
+#hc rule class=XTerm tag=3 # move all xterms to tag 3
+hc rule focus=on # normally do not focus new clients
+# give focus to most common terminals
+hc rule class~'(.*[Rr]xvt.*|.*[Tt]erm)' focus=on
+hc rule windowtype~'_NET_WM_WINDOW_TYPE_(DIALOG|UTILITY|SPLASH)' manage=off focus=on 
+#pseudotile=on floating=on
+hc rule windowtype='_NET_WM_WINDOW_TYPE_DIALOG' focus=on
+hc rule windowtype~'_NET_WM_WINDOW_TYPE_(NOTIFICATION|DOCK)' manage=off focus=off
+
+## Disable DPMS while in full screen
+#fullscreen [on|off] WINID STATE
+#    the fullscreen state of window WINID was changed to [on|off].
+
+hc rule class=Urxvt tag=cli
+hc rule class~'(Chromium|Iceweasel|Roaster|Firefox|xxxterm|Dwb|Links)' tag=www focus=on
+hc rule class=Leafpad tag=misc
+hc rule class=mplayer2 tag=media focus=on
+hc rule class=mpv tag=media focus=on
+
+# unlock, just to be sure
+hc unlock
+
+herbstclient set tree_style '╾│ ├└╼─┐'
+
+#####################
+### Start Panel   ###
+#####################
+#( $HOME/.config/herbstluftwm/panel3.sh &)
+
+# do multi monitor setup here, e.g.:
+# hc set_monitors 1280x1024+0+0 1280x1024+1280+0
+# or simply:
+# hc detect_monitors
